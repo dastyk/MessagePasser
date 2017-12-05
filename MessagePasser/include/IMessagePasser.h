@@ -7,44 +7,45 @@
 
 class PayLoad
 {
-	Utilz::GUID from;
+	friend struct Message;
 	void* payload;
 	std::function<void(void* data)> deleter;
+	PayLoad()
+	{
 
+	}
 public:
 	template<class TYPE>
-	PayLoad(Utilz::GUID from, TYPE payload) : from(from), payload(new TYPE(payload)), deleter([](void*data) { delete (TYPE*)data; })
+	PayLoad(TYPE payload) : payload(new TYPE(payload)), deleter([](void* obj) { 
+		delete (TYPE*)obj;
+	})
 	{
 
 	}
 	template<class TYPE>
-	PayLoad(Utilz::GUID from, TYPE* payload, const std::function<void(void* data)>& deleter) : from(from), payload(payload), deleter(deleter)
+	PayLoad(TYPE* payload, const std::function<void(void* data)>& deleter) : payload(payload), deleter(deleter)
 	{
 
 	}
 	PayLoad(PayLoad& other)
 	{
 		this->deleter = std::move(other.deleter);
-		this->from = other.from;
 		this->payload = other.payload;
 	}
 	PayLoad(PayLoad&& other)
 	{
 		this->deleter = std::move(other.deleter);
-		this->from = other.from;
 		this->payload = other.payload;
 	}
 	PayLoad& operator=(PayLoad&& other)
 	{
 		this->deleter = std::move(other.deleter);
-		this->from = other.from;
 		this->payload = other.payload;
 		return *this;
 	}
 	PayLoad& operator=(PayLoad& other)
 	{
 		this->deleter = std::move(other.deleter);
-		this->from = other.from;
 		this->payload = other.payload;
 		return *this;
 	}
@@ -53,14 +54,16 @@ public:
 		if (deleter)
 			deleter(payload);
 	}
-	template<class Type>
-	const Type& Get()
+	template<class TYPE>
+	const TYPE& Get()
 	{
-		return *(Type*)payload;
+		return *(TYPE*)payload;
 	}
 };
 struct Message
 {
+	Utilz::GUID to;
+	Utilz::GUID from;
 	Utilz::GUID message;
 	PayLoad payload;
 };
@@ -69,18 +72,19 @@ typedef std::queue<Message> MessageQueue;
 class IMessagePasser
 {
 public:
-	virtual ~IMessagePasser() {};
 
 	virtual void Register(Utilz::GUID name, const std::unordered_set<Utilz::GUID, Utilz::GUID::Hasher>& messages) = 0;
 	virtual void Unregister(Utilz::GUID name) = 0;
 
-	virtual void SendMessage(Utilz::GUID to, Utilz::GUID message, PayLoad payload) = 0;
-	virtual void SendMessage(Utilz::GUID message, PayLoad payload) = 0;
+	virtual void SendMessage(Utilz::GUID to, Utilz::GUID from, Utilz::GUID message, PayLoad payload) = 0;
+	virtual void SendMessage(Utilz::GUID from, Utilz::GUID message, PayLoad payload) = 0;
 
 	virtual void GetMessages(Utilz::GUID name, MessageQueue& queue) = 0;
 
 protected:
 	IMessagePasser() {};
+	virtual ~IMessagePasser() {};
+
 };
 
 
@@ -91,6 +95,7 @@ protected:
 #endif
 
 DECLDIR IMessagePasser* CreateMessagePasser();
+DECLDIR void DestroyMessagePasser(IMessagePasser*);
 
 
 #endif

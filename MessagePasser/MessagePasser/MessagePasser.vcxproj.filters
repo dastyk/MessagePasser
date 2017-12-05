@@ -15,13 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CircularFIFO.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CompileTimeString.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MessagePasser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\GUID.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\CompileTimeString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CircularFIFO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\IMessagePasser.h">

@@ -26,7 +26,7 @@ namespace Utilz
 		}
 
 		//Consumer only
-		inline const Element& top()
+		inline Element& top()
 		{
 			const auto current_head = head.load();
 			//if (current_head == tail.load())
@@ -48,21 +48,35 @@ namespace Utilz
 		}
 
 		// Producer only
-		inline bool push(const Element& item)
+		inline bool push(Element& item)
 		{
 			auto current_tail = tail.load();
 			auto current_head = head.load();
 			auto next_tail = (current_tail + 1) % Capacity;
-			if (next_tail != head.load())
+			while (next_tail == head.load());
 			{
 				buffer[current_tail] = item;
 				tail.store(next_tail);
 				return true;
 			}
-			assert(next_tail == current_head);
+			_ASSERT_EXPR(next_tail != current_head, L"Reached end of CircularFIFO");
 			return false;  // full queue
 		}
+		inline bool push(Element&& item)
+		{
+			auto current_tail = tail.load();
+			auto current_head = head.load();
+			auto next_tail = (current_tail + 1) % Capacity;
+			while (next_tail == head.load());
 
+			{
+				buffer[current_tail] = item;
+				tail.store(next_tail);
+				return true;
+			}
+			_ASSERT_EXPR(next_tail != current_head, L"Reached end of CircularFIFO");
+			return false;  // full queue
+		}
 	private:
 		Element buffer[Capacity];
 		std::atomic<size_t> head;
