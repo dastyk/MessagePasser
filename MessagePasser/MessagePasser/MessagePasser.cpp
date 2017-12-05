@@ -41,7 +41,7 @@ void MessagePasser::SendMessage(Utilz::GUID message, PayLoad payload)
 	}
 }
 
-void MessagePasser::GetMessages(Utilz::GUID name, std::queue<Message>& queue)
+void MessagePasser::GetMessages(Utilz::GUID name, MessageQueue& queue)
 {
 	if (auto const findTarget = targets.find(name); findTarget != targets.end())
 	{

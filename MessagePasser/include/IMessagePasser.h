@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <functional>
 #include <queue>
+
 class PayLoad
 {
 	Utilz::GUID from;
@@ -11,12 +12,16 @@ class PayLoad
 	std::function<void(void* data)> deleter;
 
 public:
-	PayLoad(Utilz::GUID from, void*payload, const std::function<void(void* data)>& deleter) : from(from), payload(payload), deleter(deleter)
+	template<class TYPE>
+	PayLoad(Utilz::GUID from, TYPE payload) : from(from), payload(new TYPE(payload)), deleter([](void*data) { delete (TYPE*)data; })
 	{
 
 	}
-	PayLoad(const PayLoad& other) = delete;
-	PayLoad& operator=(const PayLoad& other) = delete;
+	template<class TYPE>
+	PayLoad(Utilz::GUID from, TYPE* payload, const std::function<void(void* data)>& deleter) : from(from), payload(payload), deleter(deleter)
+	{
+
+	}
 	PayLoad(PayLoad& other)
 	{
 		this->deleter = std::move(other.deleter);
@@ -48,6 +53,11 @@ public:
 		if (deleter)
 			deleter(payload);
 	}
+	template<class Type>
+	const Type& Get()
+	{
+		return *(Type*)payload;
+	}
 };
 struct Message
 {
@@ -55,7 +65,7 @@ struct Message
 	PayLoad payload;
 };
 typedef std::unordered_set<Utilz::GUID, Utilz::GUID::Hasher> MessageSet;
-
+typedef std::queue<Message> MessageQueue;
 class IMessagePasser
 {
 public:
@@ -67,7 +77,7 @@ public:
 	virtual void SendMessage(Utilz::GUID to, Utilz::GUID message, PayLoad payload) = 0;
 	virtual void SendMessage(Utilz::GUID message, PayLoad payload) = 0;
 
-	virtual void GetMessages(Utilz::GUID name, std::queue<Message>& queue) = 0;
+	virtual void GetMessages(Utilz::GUID name, MessageQueue& queue) = 0;
 
 protected:
 	IMessagePasser() {};

@@ -8,9 +8,20 @@ int main()
 
 	mp->Register("Test", { "Create" });
 
-	mp->SendMessage("Create", PayLoad("Test", new int(1337), [](void*data) {
-		delete (int*)data; 
-	}));
+	mp->SendMessage("Create", PayLoad("Test", 1337));
+
+
+	MessageQueue messages;
+	mp->GetMessages("Test", messages);
+
+	while(messages.size())
+	{
+		auto top = messages.front();
+		
+		printf("%d", top.payload.Get<int*>());
+
+		messages.pop();
+	}
 
 	delete mp;
 }

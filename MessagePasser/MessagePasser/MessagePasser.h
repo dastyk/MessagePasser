@@ -22,7 +22,7 @@ public:
 	void SendMessage(Utilz::GUID to, Utilz::GUID message, PayLoad payload)override;
 	void SendMessage(Utilz::GUID message, PayLoad payload)override;
 
-	void GetMessages(Utilz::GUID name, std::queue<Message>& queue)override;
+	void GetMessages(Utilz::GUID name, MessageQueue& queue)override;
 
 private:
 	struct Target
