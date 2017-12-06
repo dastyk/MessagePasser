@@ -1,6 +1,7 @@
 #include <IMessagePasser.h>
 #include <thread>
 #include <string>
+#include <Profiler.h>
 
 #pragma comment(lib, "MessagePasserD.lib")
 
@@ -10,6 +11,7 @@ void Prod(IMessagePasser* mp)
 
 	while (running)
 	{
+		StartProfile;
 		MessageQueue messages;
 		mp->GetMessages("Prod", messages);
 		while (messages.size())
@@ -35,6 +37,7 @@ void Prod(IMessagePasser* mp)
 			}
 			messages.pop();
 		}
+		StopProfile;
 	}
 }
 struct MoreComplex
@@ -59,6 +62,7 @@ int main()
 	MessageQueue messages;
 	while(true)
 	{
+		StartProfile;
 		mp->GetMessages("Main", messages);
 		while (messages.size())
 		{
@@ -80,7 +84,7 @@ int main()
 			messages.pop();
 		}
 		mp->SendMessage("Prod", "Main", "Create", PayLoad(1));
-
+		StopProfile;
 	}
 	
 

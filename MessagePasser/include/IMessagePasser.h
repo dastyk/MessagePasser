@@ -81,6 +81,8 @@ public:
 
 	virtual void GetMessages(Utilz::GUID name, MessageQueue& queue) = 0;
 
+	virtual bool GetLogMessage(std::string& message) = 0;
+
 protected:
 	IMessagePasser() {};
 	virtual ~IMessagePasser() {};

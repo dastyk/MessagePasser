@@ -23,12 +23,12 @@ public:
 	void SendMessage(Utilz::GUID from, Utilz::GUID message, PayLoad payload)override;
 
 	void GetMessages(Utilz::GUID name, MessageQueue& queue)override;
-
+	bool GetLogMessage(std::string& message) override;
 private:
 	void Run();
 	bool running;
 	std::thread myThread;
-
+	Utilz::CircularFiFo<std::string> log;
 	struct Target
 	{
 		Utilz::CircularFiFo<Message> newMessages;
