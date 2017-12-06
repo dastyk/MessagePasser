@@ -4,6 +4,8 @@
 
 MessagePasser::MessagePasser()
 {
+	targets["MessagePasser"].messages = { "Stop" };
+
 	running = true;
 	myThread = std::thread(&MessagePasser::Run, this);
 }
@@ -28,24 +30,40 @@ void MessagePasser::Unregister(Utilz::GUID name)
 	targets.erase(name);
 }
 
-void MessagePasser::SendMessage(Utilz::GUID to, Utilz::GUID from, Utilz::GUID message, PayLoad payload)
+std::future<MessagePromiseType> MessagePasser::SendMessage(Utilz::GUID to, Utilz::GUID from, Utilz::GUID message, PayLoad payload)
 {
 	StartProfile;
+	std::promise<MessagePromiseType> promise;
+	auto future = promise.get_future();
 	if (auto const findTarget = targets.find(from); findTarget != targets.end())
-	{
-		findTarget->second.newMessages.push({to, from, message,payload });
+	{	
+		findTarget->second.newMessages.push({ to, from, message, std::move(promise), payload });	
 	}
-	StopProfile;
+	else
+	{
+		std::lock_guard<std::mutex> lg(defaultMessageLock);
+		targets["MessagePasser"].newMessages.push({ to, from, message, std::move(promise), payload });
+	}
+
+	ProfileReturnConst(future);
 }
 
-void MessagePasser::SendMessage(Utilz::GUID from, Utilz::GUID message, PayLoad payload)
+std::future<MessagePromiseType> MessagePasser::SendMessage(Utilz::GUID from, Utilz::GUID message, PayLoad payload)
 {
 	StartProfile;
+	std::promise<MessagePromiseType> promise;
+	auto future = promise.get_future();
 	if (auto const findTarget = targets.find(from); findTarget != targets.end())
 	{
-		findTarget->second.newMessages.push({ "Unspecified", from, message,payload });
+		findTarget->second.newMessages.push({ "Unspecified", from, message, std::move(promise), payload });
 	}
-	StopProfile;
+	else
+	{
+		std::lock_guard<std::mutex> lg(defaultMessageLock);
+		targets["MessagePasser"].newMessages.push({ "Unspecified", from, message, std::move(promise), payload });
+	}
+
+	ProfileReturnConst(future);
 }
 
 void MessagePasser::GetMessages(Utilz::GUID name, MessageQueue& queue)
@@ -64,7 +82,7 @@ bool MessagePasser::GetLogMessage(std::string & message)
 	if (!log.wasEmpty())
 	{
 		message = std::move(log.top());
-		log.pop;
+		log.pop();
 		return true;
 	}
 	return false;
@@ -82,7 +100,7 @@ void MessagePasser::Run()
 				
 				while (!from.second.newMessages.wasEmpty())
 				{
-					auto top = from.second.newMessages.top();
+					auto& top = from.second.newMessages.top();
 					if (top.to == "Unspecified")
 					{
 						for (auto& to : targets)
@@ -91,16 +109,23 @@ void MessagePasser::Run()
 							{
 								std::lock_guard<std::mutex> lock(to.second.queueLock);
 								to.second.queue.push(std::move(top));
-								break;
+								from.second.newMessages.pop();
+								continue;
 							}
 						}
+						log.push("No target had message " + std::to_string(top.message.id));
 					}
 					else if (auto const to = targets.find(top.to); to != targets.end())
 					{
 						std::lock_guard<std::mutex> lock(to->second.queueLock);
 						to->second.queue.push(std::move(top));
-					}				
-					from.second.newMessages.pop();
+						from.second.newMessages.pop();
+					}	
+					else
+					{
+						log.push("Could not find target " + std::to_string(top.to.id) + ", Message: " + std::to_string(top.message.id));
+					}
+					
 				}
 			}
 		}

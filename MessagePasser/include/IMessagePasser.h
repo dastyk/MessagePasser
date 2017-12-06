@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <functional>
 #include <queue>
+#include <future>
 
 class PayLoad
 {
@@ -37,17 +38,15 @@ public:
 		this->deleter = std::move(other.deleter);
 		this->payload = other.payload;
 	}
-	PayLoad& operator=(PayLoad&& other)
+	void operator=(PayLoad&& other)
 	{
 		this->deleter = std::move(other.deleter);
 		this->payload = other.payload;
-		return *this;
 	}
-	PayLoad& operator=(PayLoad& other)
+	void operator=(PayLoad& other)
 	{
 		this->deleter = std::move(other.deleter);
 		this->payload = other.payload;
-		return *this;
 	}
 	~PayLoad()
 	{
@@ -60,11 +59,13 @@ public:
 		return *(TYPE*)payload;
 	}
 };
+typedef bool MessagePromiseType;
 struct Message
 {
 	Utilz::GUID to;
 	Utilz::GUID from;
 	Utilz::GUID message;
+	std::promise<MessagePromiseType> promise;
 	PayLoad payload;
 };
 typedef std::unordered_set<Utilz::GUID, Utilz::GUID::Hasher> MessageSet;
@@ -76,8 +77,8 @@ public:
 	virtual void Register(Utilz::GUID name, const std::unordered_set<Utilz::GUID, Utilz::GUID::Hasher>& messages) = 0;
 	virtual void Unregister(Utilz::GUID name) = 0;
 
-	virtual void SendMessage(Utilz::GUID to, Utilz::GUID from, Utilz::GUID message, PayLoad payload) = 0;
-	virtual void SendMessage(Utilz::GUID from, Utilz::GUID message, PayLoad payload) = 0;
+	virtual std::future<MessagePromiseType> SendMessage(Utilz::GUID to, Utilz::GUID from, Utilz::GUID message, PayLoad payload) = 0;
+	virtual std::future<MessagePromiseType> SendMessage(Utilz::GUID from, Utilz::GUID message, PayLoad payload) = 0;
 
 	virtual void GetMessages(Utilz::GUID name, MessageQueue& queue) = 0;
 

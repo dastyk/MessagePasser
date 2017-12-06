@@ -19,8 +19,8 @@ public:
 	void Register(Utilz::GUID name, const std::unordered_set<Utilz::GUID, Utilz::GUID::Hasher>& messages)override;
 	void Unregister(Utilz::GUID name)override;
 
-	void SendMessage(Utilz::GUID to, Utilz::GUID from, Utilz::GUID message, PayLoad payload)override;
-	void SendMessage(Utilz::GUID from, Utilz::GUID message, PayLoad payload)override;
+	std::future<MessagePromiseType> SendMessage(Utilz::GUID to, Utilz::GUID from, Utilz::GUID message, PayLoad payload)override;
+	std::future<MessagePromiseType> SendMessage(Utilz::GUID from, Utilz::GUID message, PayLoad payload)override;
 
 	void GetMessages(Utilz::GUID name, MessageQueue& queue)override;
 	bool GetLogMessage(std::string& message) override;
@@ -28,6 +28,8 @@ private:
 	void Run();
 	bool running;
 	std::thread myThread;
+	std::mutex defaultMessageLock; // Only used when someone unregistered tried to send a message.
+
 	Utilz::CircularFiFo<std::string> log;
 	struct Target
 	{
