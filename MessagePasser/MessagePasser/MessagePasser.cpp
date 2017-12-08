@@ -2,11 +2,10 @@
 #include <Profiler.h>
 
 
-MessagePasser::MessagePasser()
+MessagePasser::MessagePasser() : running(true), started(false)
 {
 	targets["MessagePasser"].messages = { "Stop" };
 
-	running = true;
 	myThread = std::thread(&MessagePasser::Run, this);
 }
 
@@ -14,6 +13,7 @@ MessagePasser::MessagePasser()
 MessagePasser::~MessagePasser()
 {
 	running = false;
+	started = false;
 	if (myThread.joinable())
 	{
 		myThread.join();
@@ -22,12 +22,14 @@ MessagePasser::~MessagePasser()
 
 void MessagePasser::Register(Utilz::GUID name, const std::unordered_set<Utilz::GUID, Utilz::GUID::Hasher>& messages)
 {
-	targets[name].messages = messages;
+	std::lock_guard<std::mutex> lock(targetAddRemoveLock);
+	targetsToAdd.push({name, messages });
 }
 
 void MessagePasser::Unregister(Utilz::GUID name)
 {
-	targets.erase(name);
+	std::lock_guard<std::mutex> lock(targetAddRemoveLock);
+	targetsToRemove.push(name);
 }
 
 std::future<MessagePromiseType> MessagePasser::SendMessage(Utilz::GUID to, Utilz::GUID from, Utilz::GUID message, PayLoad payload)
@@ -36,8 +38,8 @@ std::future<MessagePromiseType> MessagePasser::SendMessage(Utilz::GUID to, Utilz
 	std::promise<MessagePromiseType> promise;
 	auto future = promise.get_future();
 	if (auto const findTarget = targets.find(from); findTarget != targets.end())
-	{	
-		findTarget->second.newMessages.push({ to, from, message, std::move(promise), payload });	
+	{
+		findTarget->second.newMessages.push({ to, from, message, std::move(promise), payload });
 	}
 	else
 	{
@@ -88,11 +90,42 @@ bool MessagePasser::GetLogMessage(std::string & message)
 	return false;
 }
 
+void MessagePasser::Start()
+{
+	started = true;
+}
+
+void MessagePasser::Stop()
+{
+	started = false;
+}
+using namespace std::chrono_literals;
 void MessagePasser::Run()
 {
 	while (running)
 	{
+		if (!started)
+		{
+			std::this_thread::sleep_for(33ms);
+			continue;
+		}
 		StartProfile;
+	
+		while (!targetsToAdd.wasEmpty())
+		{
+			auto& top = targetsToAdd.top();
+			targets[top.name].messages = top.messages;
+			targetsToAdd.pop();
+		}
+		while (!targetsToRemove.wasEmpty())
+		{
+			auto& top = targetsToRemove.top();
+			targets.erase(top);
+			targetsToRemove.pop();
+		}
+
+
+
 		for (auto& from : targets)
 		{
 			if (!from.second.newMessages.wasEmpty())
@@ -119,13 +152,12 @@ void MessagePasser::Run()
 					{
 						std::lock_guard<std::mutex> lock(to->second.queueLock);
 						to->second.queue.push(std::move(top));
-						from.second.newMessages.pop();
 					}	
 					else
 					{
 						log.push("Could not find target " + std::to_string(top.to.id) + ", Message: " + std::to_string(top.message.id));
 					}
-					
+					from.second.newMessages.pop();
 				}
 			}
 		}

@@ -24,20 +24,33 @@ public:
 
 	void GetMessages(Utilz::GUID name, MessageQueue& queue)override;
 	bool GetLogMessage(std::string& message) override;
+
+	void Start() override;
+	void Stop() override;
 private:
 	void Run();
 	bool running;
+	bool started;
 	std::thread myThread;
 	std::mutex defaultMessageLock; // Only used when someone unregistered tried to send a message.
 
 	Utilz::CircularFiFo<std::string> log;
+
 	struct Target
 	{
-		Utilz::CircularFiFo<Message> newMessages;
 		std::unordered_set<Utilz::GUID, Utilz::GUID::Hasher> messages;
+		Utilz::CircularFiFo<Message> newMessages;
 		std::mutex queueLock;
 		std::queue<Message> queue;
+	};	
+	struct TargetToAddStruct
+	{
+		Utilz::GUID name;
+		std::unordered_set<Utilz::GUID, Utilz::GUID::Hasher> messages;
 	};
+	Utilz::CircularFiFo<TargetToAddStruct> targetsToAdd;
+	Utilz::CircularFiFo<Utilz::GUID> targetsToRemove;
+	std::mutex targetAddRemoveLock;
 	std::unordered_map<Utilz::GUID, Target, Utilz::GUID::Hasher> targets;
 };
 

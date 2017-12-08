@@ -21,9 +21,6 @@
     <ClInclude Include="..\include\GUID.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\CompileTimeString.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CircularFIFO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -31,6 +28,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\MessageSwitcher.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\CompileTimeString.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
