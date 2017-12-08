@@ -34,6 +34,7 @@
 			bool operator!=(const GUID& other) const { return id != other.id; }
 			bool operator==(const GUID& other) const { return id == other.id; }
 			GUID& operator=(const GUID& other) { this->id = other.id; return *this; }
+			constexpr operator HashValue() { return id; };
 			GUID operator+(const GUID &other) const
 			{
 				return id ^ other.id;

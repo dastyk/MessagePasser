@@ -30,6 +30,9 @@
     <ClInclude Include="..\include\IMessagePasser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\MessageSwitcher.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MessagePasser.cpp">

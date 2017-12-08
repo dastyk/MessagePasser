@@ -147,6 +147,7 @@
     <ClInclude Include="..\include\CompileTimeString.h" />
     <ClInclude Include="..\include\GUID.h" />
     <ClInclude Include="..\include\IMessagePasser.h" />
+    <ClInclude Include="..\include\MessageSwitcher.h" />
     <ClInclude Include="CircularFIFO.h" />
     <ClInclude Include="MessagePasser.h" />
   </ItemGroup>

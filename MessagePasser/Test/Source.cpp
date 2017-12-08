@@ -2,11 +2,18 @@
 #include <thread>
 #include <string>
 #include <Profiler.h>
-
+#include <MessageSwitcher.h>
 #pragma comment(lib, "MessagePasserD.lib")
 
 void Prod(IMessagePasser* mp) 
 {
+
+	MessageSwitcher<
+		"Create"_hash,
+		"Destroy"_hash>(
+			[](){},
+			[]() {}
+	);
 	bool running = true;
 
 	while (running)
