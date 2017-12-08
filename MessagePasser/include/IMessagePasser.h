@@ -5,7 +5,6 @@
 #include <functional>
 #include <queue>
 #include <future>
-
 class PayLoad
 {
 	friend struct Message;
@@ -86,8 +85,8 @@ public:
 	virtual std::future<MessagePromiseType> SendMessage(Utilz::GUID to, Utilz::GUID from, Utilz::GUID message, PayLoad payload = PayLoad(nullptr)) = 0;
 	virtual std::future<MessagePromiseType> SendMessage(Utilz::GUID from, Utilz::GUID message, PayLoad payload = PayLoad(nullptr)) = 0;
 
-	virtual void GetMessages(Utilz::GUID name, MessageQueue& queue) = 0;
-
+	//virtual void GetMessages(Utilz::GUID name, MessageQueue& queue) = 0;
+	virtual void ResolveMessages(Utilz::GUID name, const std::function<void(Message&)>& resolver) = 0;
 	virtual bool GetLogMessage(std::string& message) = 0;
 
 	virtual void Start() = 0;
@@ -105,7 +104,7 @@ protected:
 #else
 #define DECLDIR __declspec(dllimport)
 #endif
-
+#define DECLDIR
 DECLDIR IMessagePasser* CreateMessagePasser();
 DECLDIR void DestroyMessagePasser(IMessagePasser*);
 

@@ -68,15 +68,28 @@ std::future<MessagePromiseType> MessagePasser::SendMessage(Utilz::GUID from, Uti
 	ProfileReturnConst(future);
 }
 
-void MessagePasser::GetMessages(Utilz::GUID name, MessageQueue& queue)
+//void MessagePasser::GetMessages(Utilz::GUID name, MessageQueue& queue)
+//{
+//	StartProfile;
+//	if (auto const findTarget = targets.find(name); findTarget != targets.end())
+//	{
+//		std::lock_guard<std::mutex> lock(findTarget->second.queueLock);
+//		queue = std::move(findTarget->second.queue);
+//	}
+//	StopProfile;
+//}
+
+void MessagePasser::ResolveMessages(Utilz::GUID name, const std::function<void(Message&)>& resolver)
 {
-	StartProfile;
 	if (auto const findTarget = targets.find(name); findTarget != targets.end())
 	{
-		std::lock_guard<std::mutex> lock(findTarget->second.queueLock);
-		queue = std::move(findTarget->second.queue);
+		auto& dm = findTarget->second.deliveredMessages;
+		while (!dm.wasEmpty())
+		{
+			resolver(dm.top());
+			dm.pop();
+		}
 	}
-	StopProfile;
 }
 
 bool MessagePasser::GetLogMessage(std::string & message)
@@ -141,7 +154,7 @@ void MessagePasser::Run()
 							if (auto const findMSG = to.second.messages.find(top.message); findMSG != to.second.messages.end())
 							{
 								std::lock_guard<std::mutex> lock(to.second.queueLock);
-								to.second.queue.push(std::move(top));
+								to.second.deliveredMessages.push(std::move(top));
 								from.second.newMessages.pop();
 								continue;
 							}
@@ -151,7 +164,7 @@ void MessagePasser::Run()
 					else if (auto const to = targets.find(top.to); to != targets.end())
 					{
 						std::lock_guard<std::mutex> lock(to->second.queueLock);
-						to->second.queue.push(std::move(top));
+						to->second.deliveredMessages.push(std::move(top));
 					}	
 					else
 					{

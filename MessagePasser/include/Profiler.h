@@ -73,10 +73,18 @@ class Profiler
 		}
 		const void dumpRoot(std::stringstream & out)
 		{
+			static const auto ripLG = [](const std::string& str)
+			{
+				std::string temp = str;
+				std::replace(temp.begin(), temp.end(), '<', '_');
+				std::replace(temp.begin(), temp.end(), '>', '_');
+				return temp;
+			};
+
 			out << "\"" << this << "\"" << "[\n shape = none\n";
 			out << "label = <<table border=\"0\" cellspacing = \"0\">\n";
 
-			out << "<tr><td port=\"port1\" border=\"1\" bgcolor = \"#" << getHexCode(0) << getHexCode(150) << getHexCode(50) << "\"><font color=\"white\">" << functionName << "</font></td></tr>\n";
+			out << "<tr><td port=\"port1\" border=\"1\" bgcolor = \"#" << getHexCode(0) << getHexCode(150) << getHexCode(50) << "\"><font color=\"white\">" << ripLG(functionName) << "</font></td></tr>\n";
 		
 			for (auto& c : children)
 			{
@@ -95,12 +103,19 @@ class Profiler
 		}
 		const void dump(std::stringstream & out)
 		{
+			static const auto ripLG = [](const std::string& str)
+			{
+				std::string temp = str;
+				std::replace(temp.begin(), temp.end(), '<', '_');
+				std::replace(temp.begin(), temp.end(), '>', '_');
+				return temp;
+			};
 			out << "\"" << this << "\"" << "[\n shape = none\n";
 			out << "label = <<table border=\"0\" cellspacing = \"0\">\n";
 			double div = 0.0;
 			if (parent)
 				div = ((double)timeSpent.count() / parent->timeSpent.count());
-			out << "<tr><td port=\"port1\" border=\"1\" bgcolor = \"#" << getHexCode(unsigned char(150*div)) << getHexCode(50) << getHexCode(unsigned char(50 * (1.0-div))) << "\"><font color=\"white\">" << functionName << "</font></td></tr>\n";
+			out << "<tr><td port=\"port1\" border=\"1\" bgcolor = \"#" << getHexCode(unsigned char(150*div)) << getHexCode(50) << getHexCode(unsigned char(50 * (1.0-div))) << "\"><font color=\"white\">" << ripLG(functionName) << "</font></td></tr>\n";
 			out << "<tr><td border=\"1\">" << "Times Called: " << timesCalled << "</td></tr>\n";
 			out << "<tr><td border=\"1\">" << "Time Spent(IC): " << std::chrono::duration_cast<_P_TIMESCALE>(timeSpent).count() << " " << scale;
 			if (parent)
@@ -278,22 +293,25 @@ WScript.Echo(""+year+mon+day+h+m+s+ms);)";
 		std::ofstream rf;
 		rf.open("Profiler\\BatchInstructions.txt", std::ios::trunc);
 		if (rf.is_open())
-			rf << R"(Download Graphviz, Ghostscript and GnuWin32
-
+			rf << R"(Download Graphviz
 http://www.graphviz.org/pub/graphviz/stable/windows/graphviz-2.38.msi
-https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs921/gs921w64.exe
-https://sourceforge.net/projects/getgnuwin32/files/getgnuwin32/0.6.30/GetGnuWin32-0.6.3.exe/download
-
 Add C:\Program Files (x86)\Graphviz2.38\bin (or equivalent) to Path Environment variable
-Add C:\Program Files\gs\gs9.21\lib (or equivalent) to Path Environment variable
-C:\Program Files (x86)\GnuWin32\bin (or equivalent) to Path Environment variable
+
 )";
+		static const auto ripLG = [](const std::string& str)
+		{
+			std::string temp = str;
+			std::replace(temp.begin(), temp.end(), '<', '_');
+			std::replace(temp.begin(), temp.end(), '>', '_');
+			return temp;
+		};
+
 
 
 		rf.close();
 		std::ofstream out;
 		std::stringstream fn;
-		fn <<  "Profiler\\" << _profile->functionName << "\\profile_" << std::this_thread::get_id() << ".dot";
+		fn <<  "Profiler\\" << ripLG(_profile->functionName) << "\\profile_" << std::this_thread::get_id() << ".dot";
 		out.open(fn.str(), std::ios::out | std::ios::trunc);
 		if (!out.is_open())
 			throw std::exception("Profile file could not be opened");

@@ -22,10 +22,12 @@ void Prod(IMessagePasser* mp)
 		mp->SendMessage("Prod", "Print", PayLoad("Stopping"));
 		msg.promise.set_value(true);
 	},
-		[](CallbackParamerer msg) {
+		[mp](CallbackParamerer msg) {
 		auto count = msg.payload.Get<int>();
-		for (int i = 0; i< count; i++)
-			printf("%d\n", i);
+		int sum = 0;
+		for (int i = 0; i < count; i++)
+			sum += i + 1;
+		mp->SendMessage("Main", "Prod", "acc", PayLoad(sum));
 		msg.promise.set_value(true);
 	}
 	);
@@ -34,13 +36,15 @@ void Prod(IMessagePasser* mp)
 	mp->Register("Prod", asd);
 
 	
-	MessageQueue messages;
+	//MessageQueue messages;
 	
 	while (running)
 	{
 		StartProfile;		
-		mp->GetMessages("Prod", messages);
-		ms.ResolveAllMessages(messages);
+	//	mp->GetMessages("Prod", messages);
+		mp->ResolveMessages("Prod", [ms](Message& msg) {
+			ms.ResolveMessage(msg);
+		});
 		StopProfile;
 	}
 }
@@ -55,28 +59,36 @@ struct MoreComplex
 
 int main()
 {
+	bool acc = true;
 	auto mp = CreateMessagePasser();
+	auto ms = MessageSwitcher<"acc"_hash>([&acc](CallbackParamerer msg) {
+		acc = true;
+	});
+
+	mp->Register("Main", ms.GetMessageSet());
 
 	auto prod = std::thread(Prod, mp);
-	auto future = mp->SendMessage("Prod", "Main", "Create", PayLoad(5));
 	mp->Start();
-	MessageQueue messages;
 	bool running = true;
 	size_t count = 0;
-	while(count++ < 4000)
+
+	while(count < 10000000)
 	{
 		StartProfile;
-		if (future.get())
+		mp->ResolveMessages("Main", [ms](Message& msg) {
+			ms.ResolveMessage(msg);
+		});
+		if (acc)
 		{
-			printf("Done\n");
-			
-			future = mp->SendMessage("Prod", "Main", "Create", PayLoad(5));
-			//running = false;
-		}
+			count++;
+			acc = false;
 
+			mp->SendMessage("Prod", "Main", "Create", PayLoad(5));
+
+		}
 		StopProfile;
 	}
-	future = mp->SendMessage("Prod", "Main", "Stop");
+	mp->SendMessage("Prod", "Main", "Stop");
 	prod.join();
 
 	DestroyMessagePasser(mp);

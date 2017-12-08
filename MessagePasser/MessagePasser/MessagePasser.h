@@ -22,7 +22,8 @@ public:
 	std::future<MessagePromiseType> SendMessage(Utilz::GUID to, Utilz::GUID from, Utilz::GUID message, PayLoad payload)override;
 	std::future<MessagePromiseType> SendMessage(Utilz::GUID from, Utilz::GUID message, PayLoad payload)override;
 
-	void GetMessages(Utilz::GUID name, MessageQueue& queue)override;
+	//void GetMessages(Utilz::GUID name, MessageQueue& queue)override;
+	void ResolveMessages(Utilz::GUID name, const std::function<void(Message&)>& resolver)override;
 	bool GetLogMessage(std::string& message) override;
 
 	void Start() override;
@@ -41,7 +42,7 @@ private:
 		std::unordered_set<Utilz::GUID, Utilz::GUID::Hasher> messages;
 		Utilz::CircularFiFo<Message> newMessages;
 		std::mutex queueLock;
-		std::queue<Message> queue;
+		Utilz::CircularFiFo<Message> deliveredMessages;
 	};	
 	struct TargetToAddStruct
 	{

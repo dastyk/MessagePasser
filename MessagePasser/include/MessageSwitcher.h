@@ -76,14 +76,8 @@ namespace Sorter
 		sort_impl(sorted, 0, N);
 		return sorted;
 	}
-
-	//
-	//constexpr array<int, 11> unsorted{ 5,7,3,4,1,8,2,9,0,6,10 }; // odd number of elements
-	//constexpr auto sorted = sort(unsorted);
-
-
 	template <size_t Low, size_t High, class TYPE, class ARRAY>
-	inline typename std::enable_if < High - Low < 64, std::optional<std::reference_wrapper<const TYPE>>>::type
+	typename std::enable_if < High - Low < 64, std::optional<std::reference_wrapper<const TYPE>>>::type
 		searchBinary(TYPE key, const ARRAY& arr)
 	{
 		for (size_t i = Low; i < High; i++)
@@ -93,7 +87,7 @@ namespace Sorter
 	}
 
 	template <size_t Low, size_t High, class TYPE, class ARRAY>
-	typename std::enable_if < Low < High && High - Low >= 64, std::optional<std::reference_wrapper<const TYPE>>>::type
+	inline typename std::enable_if < Low < High && High - Low >= 64, std::optional<std::reference_wrapper<const TYPE>>>::type
 		searchBinary(TYPE key, const ARRAY& arr)
 	{
 		constexpr size_t Mid = Low + ((High - Low) >> 1);
@@ -157,24 +151,12 @@ public:
 		return { MSGS ... };
 	}
 
-	void ResolveMessage(CallbackParamerer msg)const
+	inline void ResolveMessage(CallbackParamerer msg)const
 	{
 		StartProfile;
 		if (const auto find = findMessage(msg.message); find.has_value())
 		{
 			callbacks[find->get().index](msg);
-		}
-		StopProfile;
-	}
-
-	void ResolveAllMessages(MessageQueue& queue)const
-	{
-		StartProfile;
-		while (queue.size())
-		{
-			Message msg = std::move(queue.front());
-			ResolveMessage(msg);
-			queue.pop();
 		}
 		StopProfile;
 	}
