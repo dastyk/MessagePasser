@@ -41,7 +41,6 @@ private:
 	{
 		std::unordered_set<Utilz::GUID, Utilz::GUID::Hasher> messages;
 		Utilz::CircularFiFo<Message> newMessages;
-		std::mutex queueLock;
 		Utilz::CircularFiFo<Message> deliveredMessages;
 	};	
 	struct TargetToAddStruct

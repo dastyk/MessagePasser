@@ -35,13 +35,9 @@ void Prod(IMessagePasser* mp)
 	auto asd = ms.GetMessageSet();
 	mp->Register("Prod", asd);
 
-	
-	//MessageQueue messages;
-	
 	while (running)
 	{
 		StartProfile;		
-	//	mp->GetMessages("Prod", messages);
 		mp->ResolveMessages("Prod", [ms](Message& msg) {
 			ms.ResolveMessage(msg);
 		});

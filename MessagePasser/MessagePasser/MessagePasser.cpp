@@ -153,7 +153,6 @@ void MessagePasser::Run()
 						{
 							if (auto const findMSG = to.second.messages.find(top.message); findMSG != to.second.messages.end())
 							{
-								std::lock_guard<std::mutex> lock(to.second.queueLock);
 								to.second.deliveredMessages.push(std::move(top));
 								from.second.newMessages.pop();
 								continue;
@@ -163,7 +162,6 @@ void MessagePasser::Run()
 					}
 					else if (auto const to = targets.find(top.to); to != targets.end())
 					{
-						std::lock_guard<std::mutex> lock(to->second.queueLock);
 						to->second.deliveredMessages.push(std::move(top));
 					}	
 					else
