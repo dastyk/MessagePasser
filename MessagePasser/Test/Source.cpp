@@ -40,7 +40,7 @@ void Prod(IMessagePasser* mp)
 	{
 		StartProfile;		
 		mp->GetMessages("Prod", messages);
-		ms.ResolveAllMessage(messages);
+		ms.ResolveAllMessages(messages);
 		StopProfile;
 	}
 }
