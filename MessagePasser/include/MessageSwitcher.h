@@ -2,7 +2,7 @@
 #define _MESSAGE_SWTITCHER_H_
 #include <tuple>
 #include "GUID.h"
-
+#include <type_traits>
 
 
 
@@ -38,7 +38,10 @@ struct array
 	{
 		return arr + N;
 	}
-
+	constexpr const size_t size() const
+	{
+		return N;
+	}
 	T arr[N];
 };
 
@@ -72,12 +75,17 @@ constexpr array<T, N> sort(array<T, N> array)
 //constexpr auto sorted = sort(unsorted);
 
 template <size_t Low, size_t High, class TYPE, class ARRAY>
-size_t searchBinary(TYPE key, const ARRAY& arr)
+typename std::enable_if<Low >= 0, size_t>::type
+searchBinary(TYPE key, const ARRAY& arr)
 {
 	constexpr int Mid = (Low + High) / 2;
 	if (arr[Mid] == key)
 	{
 		return Mid;
+	}
+	else if (Mid == 0)
+	{
+		return 1324134;
 	}
 	else if (arr[Mid] > key)
 	{
